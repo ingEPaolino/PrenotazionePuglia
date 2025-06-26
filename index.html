@@ -1,0 +1,1810 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<link rel="stylesheet" href="stile.css">
+    <title>Prenotazioni Sanitarie Puglia</title>
+</head>
+<body>
+    <div class="container">
+        <button class="logout-btn hidden" id="logoutBtn" onclick="initialLogout()">🚪 Esci</button>
+        
+        <div class="header">
+            <h1>🏥 Prenotazioni Sanitarie Puglia</h1>
+            <p>Sistema di prenotazione online per le prestazioni sanitarie</p>
+        </div>
+
+        <!-- Sezione Login Iniziale -->
+        <div class="section initial-login-section" id="initialLoginSection">
+            <h2>🔐 Accesso Amministrativo</h2>
+                    
+            <div class="form-group">
+                <label for="adminUsername">Username:</label>
+                <input type="text" id="adminUsername" placeholder="Inserisci username" onkeypress="handleInitialLoginKeyPress(event)">
+            </div>
+            <div class="form-group">
+                <label for="adminPassword">Password:</label>
+                <input type="password" id="adminPassword" placeholder="Inserisci password" onkeypress="handleInitialLoginKeyPress(event)">
+            </div>
+            <div style="text-align: right;">
+                <button class="btn" onclick="initialLogin()">Accedi al Sistema</button>
+            </div>
+        </div>
+
+        <!-- Sezione Login Sanitario -->
+        <div class="section hidden" id="loginSection">
+            <h2>🔐 Accesso Paziente</h2>
+            <div class="form-group">
+                <label for="fiscalCode">Codice Fiscale:</label>
+                <input type="text" id="fiscalCode" placeholder="Inserisci il tuo codice fiscale" maxlength="16">
+            </div>
+            <div class="form-group">
+                <label for="healthCard">Numero Tessera Sanitaria:</label>
+                <input type="text" id="healthCard" placeholder="Inserisci il numero della tessera sanitaria" maxlength="20">
+            </div>
+            <div style="text-align: right;">
+                <button class="btn" onclick="login()">Accedi al Sistema</button>
+            </div>
+        </div>
+
+        <!-- Sezione Ricerca -->
+        <div class="section hidden" id="searchSection">
+            <h2>🔍 Ricerca Prestazioni</h2>
+            <div class="search-section">
+                <div class="form-group">
+                    <label for="serviceSearch">Cerca Prestazione:</label>
+                    <input type="search" id="serviceSearch" placeholder="codice regionale e descrizione della prestazione o NRE" onkeypress="handleSearchKeyPress(event)">
+                </div>
+                <button class="btn" onclick="searchServices()">Cerca</button>
+            </div>
+        </div>
+
+        <!-- Sezione Risultati -->
+        <div class="section hidden" id="resultsSection">
+			<h2>📋 Prestazioni Disponibili</h2>
+			<div id="serviceResults"></div>
+			<div class="selected-services-recap hidden" id="selectedServicesRecap">
+				<h3>🎯 Prestazioni Selezionate</h3>
+				<div id="selectedServicesList"></div>
+				<div class="recap-actions">
+					<button class="btn btn-secondary" onclick="clearAllSelections()">🗑️ Rimuovi Tutte</button>
+					<span class="selected-count" id="selectedCount">0 prestazioni selezionate</span>
+				</div>
+			</div>
+			<div class="availability-section hidden" id="availabilityControls">	
+				<!-- Multi-select per Aziende Ospedaliere -->
+				<div class="form-group">
+					<label for="companiesSelect">Aziende Ospedaliere:</label>
+					<div class="multi-select-container" id="companiesSelect">
+						<div class="multi-select-header" onclick="toggleCompaniesDropdown()">
+							<span id="selectedCompaniesText">Seleziona aziende ospedaliere...</span>
+							<span class="dropdown-arrow" id="companiesArrow">▼</span>
+						</div>
+						<div class="multi-select-dropdown" id="companiesDropdown">
+							<div class="multi-select-option" onclick="toggleCompany('C160114')">
+								<input type="checkbox" id="company_C160114" value="C160114">
+								<label for="company_C160114">ASL Bari</label>
+							</div>
+							<div class="multi-select-option" onclick="toggleCompany('C160907')">
+								<input type="checkbox" id="company_C160907" value="C160907">
+								<label for="company_C160907">Policlinico</label>
+							</div>
+							<div class="multi-select-option" onclick="toggleCompany('C160113')">
+								<input type="checkbox" id="company_C160113" value="C160113">
+								<label for="company_C160210">ASL BAT</label>
+							</div>
+							<!--<div class="multi-select-option" onclick="toggleCompany('C160115')">
+								<input type="checkbox" id="company_C160115" value="C160115">
+								<label for="company_C160210">ASL Foggia</label>
+							</div>-->
+							<div class="multi-select-option" onclick="toggleCompany('C160112')">
+								<input type="checkbox" id="company_C160112" value="C160112">
+								<label for="company_C160210">ASL Taranto</label>
+							</div>
+							<div class="multi-select-option" onclick="toggleCompany('C160106')">
+								<input type="checkbox" id="company_C160106" value="C160106">
+								<label for="company_C160210">ASL Brindisi</label>
+							</div>
+							<div class="multi-select-option" onclick="toggleCompany('C160116')">
+								<input type="checkbox" id="company_C160116" value="C160116">
+								<label for="company_C160210">ASL Lecce</label>
+							</div>
+							<div class="multi-select-option" onclick="toggleCompany('C160910')">
+								<input type="checkbox" id="company_C160910" value="C160910">
+								<label for="company_C160210">Azienda Ospedaliera Ospedali Riuniti</label>
+							</div>
+							<div class="multi-select-option" onclick="toggleCompany('C160901')">
+								<input type="checkbox" id="company_C160901" value="C160901">
+								<label for="company_C160210">I.R.C.C.S. Ospedale Oncologico</label>
+							</div>
+						</div>
+					</div>
+				</div>	
+			</div>
+			<div class="availability-section hidden" id="availabilityControls">							
+				<div class="form-group">
+					<label for="priority">Priorità:</label>
+					<select id="priority" class="form-control">
+						<option value="P">Programmato (P)</option>
+						<option value="D">Differibile (D)</option>
+						<option value="B">Breve (B)</option>
+						<option value="U">Urgente (U)</option>
+					</select>
+				</div>
+				<div class="form-group">				
+					<label for="cupDate">Cerca disponibilità dal:</label>
+					<input type="date" id="cupDate" min="">
+				</div>	
+				<div class="form-group">
+					<label for="cupDateTo">Al: (opzionale)</label>
+					<input type="date" id="cupDateTo" min="">
+				</div>			
+			</div>
+			<div class="availability-section hidden" id="availabilityControls">	
+				<div class="card">
+					<div class="card-header" onclick="toggleCard()">
+						<h3 class="card-title">Opzioni extra</h3>
+						<span class="collapse-icon collapsed">▲</span>
+					</div>
+					<div class="card-body" id="cardBody">
+						<div class="form-group">
+							<div class="checkbox-group">
+								<input type="checkbox" id="recursiveSearch">
+								<label for="recursiveSearch">Ricerca ricorsiva</label>
+							</div>
+							<div class="exclude-input-group">
+								<label for="excludeStructures">Escludi strutture contenenti: (opzionale)(ammessi più valori divisi da virgola)</label>
+								<input type="text" id="excludeStructures" placeholder="Nome struttura da escludere">
+							</div>
+						</div>
+					</div>
+				</div>	
+			</div>
+			<div class="availability-section hidden" id="availabilityControls">
+				<button class="btn" id="checkAvailabilityBtn" onclick="checkAvailability()">Verifica Disponibilità</button>
+			</div>
+		</div>
+
+        <!-- Sezione Disponibilità -->
+        <div class="section hidden" id="availabilitySection">
+            <h2>📅 Disponibilità Appuntamenti</h2>
+            <div id="appointmentResults"></div>
+        </div>
+		
+		<!-- Sezione da aggiungere dopo la sezione availabilitySection -->
+		<div class="section hidden" id="prescriptionSection">
+			<h2>📋 Inserisci Numero Ricetta</h2>
+			<div class="form-group">
+				<label for="prescriptionNumber">Numero Ricetta (NRE):</label>
+				<input type="text" id="prescriptionNumber" placeholder="Es: 160A24591524036" maxlength="20" onkeypress="handlePrescriptionKeyPress(event)">
+			</div>
+			<div style="text-align: right;">
+				<button class="btn btn-secondary" onclick="backToAvailability()">⬅️ Indietro</button>
+				<button class="btn" onclick="searchPrescription()">🔍 Verifica Ricetta</button>
+			</div>
+		</div>
+
+		<!-- Sezione da aggiungere dopo prescriptionSection -->
+		<div class="section hidden" id="prescriptionValidationSection">
+			<h2>✅ Validazione Ricetta</h2>
+			<div id="prescriptionValidationResults"></div>
+			<div class="form-actions" style="margin-top: 30px; text-align: right;">
+				<button class="btn btn-secondary" onclick="backToPrescription()">⬅️ Modifica Ricetta</button>
+				<button class="btn" id="proceedToBookingBtn" onclick="proceedToBooking()" disabled>📅 Procedi alla Prenotazione</button>
+			</div>
+		</div>
+		
+		<!-- Sezione Dati Contatto -->
+		<div class="section hidden" id="contactDataSection">
+			<h2>📞 Dati di Contatto</h2>
+			<p style="color: #7f8c8d; margin-bottom: 20px;">
+				Inserisci i tuoi dati di contatto per completare la prenotazione.
+			</p>
+			<div class="form-group">
+				<label for="phoneNumber">Numero di Telefono: <span style="color: red;">*</span></label>
+				<input type="tel" id="phoneNumber" placeholder="Es: 3331234567" maxlength="15" onkeypress="handleContactKeyPress(event)">
+			</div>
+			<div class="form-group">
+				<label for="emailAddress">Email (opzionale):</label>
+				<input type="email" id="emailAddress" placeholder="Es: mario.rossi@email.com" onkeypress="handleContactKeyPress(event)">
+			</div>
+			<div class="form-actions" style="margin-top: 30px; text-align: right;">
+				<button class="btn btn-secondary" onclick="backToPrescriptionValidation()">⬅️ Indietro</button>
+				<button class="btn" onclick="validateContactAndProceed()">📅 Completa Prenotazione</button>
+			</div>
+		</div>
+
+        <!-- Loading -->
+        <div class="loading" id="loadingDiv">
+            <div class="spinner"></div>
+            <p>Caricamento in corso...</p>
+        </div>
+
+        <!-- Messaggi -->
+        <div id="messageDiv"></div>
+    </div>
+
+    <script>
+        
+		// Implementazione SHA-256 sincrona
+        class SyncPasswordHasher {
+            constructor() {
+                this.iterations = 10000; // 10k iterazioni per essere sicuri ma veloci
+            }
+            
+            // Implementazione SHA-256 sincrona
+            sha256(message) {
+                // Converte stringa in array di byte UTF-8
+                const msgBuffer = new TextEncoder().encode(message);
+                
+                // Inizializza i valori hash (primi 32 bit delle radici quadrate dei primi 8 numeri primi)
+                let h = [
+                    0x6a09e667, 0xbb67ae85, 0x3c6ef372, 0xa54ff53a,
+                    0x510e527f, 0x9b05688c, 0x1f83d9ab, 0x5be0cd19
+                ];
+                
+                // Costanti K (primi 32 bit delle radici cubiche dei primi 64 numeri primi)
+                const k = [
+                    0x428a2f98, 0x71374491, 0xb5c0fbcf, 0xe9b5dba5, 0x3956c25b, 0x59f111f1, 0x923f82a4, 0xab1c5ed5,
+                    0xd807aa98, 0x12835b01, 0x243185be, 0x550c7dc3, 0x72be5d74, 0x80deb1fe, 0x9bdc06a7, 0xc19bf174,
+                    0xe49b69c1, 0xefbe4786, 0x0fc19dc6, 0x240ca1cc, 0x2de92c6f, 0x4a7484aa, 0x5cb0a9dc, 0x76f988da,
+                    0x983e5152, 0xa831c66d, 0xb00327c8, 0xbf597fc7, 0xc6e00bf3, 0xd5a79147, 0x06ca6351, 0x14292967,
+                    0x27b70a85, 0x2e1b2138, 0x4d2c6dfc, 0x53380d13, 0x650a7354, 0x766a0abb, 0x81c2c92e, 0x92722c85,
+                    0xa2bfe8a1, 0xa81a664b, 0xc24b8b70, 0xc76c51a3, 0xd192e819, 0xd6990624, 0xf40e3585, 0x106aa070,
+                    0x19a4c116, 0x1e376c08, 0x2748774c, 0x34b0bcb5, 0x391c0cb3, 0x4ed8aa4a, 0x5b9cca4f, 0x682e6ff3,
+                    0x748f82ee, 0x78a5636f, 0x84c87814, 0x8cc70208, 0x90befffa, 0xa4506ceb, 0xbef9a3f7, 0xc67178f2
+                ];
+                
+                // Pre-processing
+                const msgLen = msgBuffer.length;
+                const bitLen = msgLen * 8;
+                
+                // Padding
+                const paddedLen = Math.ceil((msgLen + 9) / 64) * 64;
+                const padded = new Uint8Array(paddedLen);
+                padded.set(msgBuffer);
+                padded[msgLen] = 0x80;
+                
+                // Aggiunge la lunghezza del messaggio alla fine (big-endian)
+                const view = new DataView(padded.buffer);
+                view.setUint32(paddedLen - 4, bitLen & 0xffffffff, false);
+                view.setUint32(paddedLen - 8, Math.floor(bitLen / 0x100000000), false);
+                
+                // Processa il messaggio in blocchi da 512 bit (64 byte)
+                for (let i = 0; i < paddedLen; i += 64) {
+                    const w = new Array(64);
+                    
+                    // Copia il blocco in w[0..15]
+                    for (let j = 0; j < 16; j++) {
+                        w[j] = view.getUint32(i + j * 4, false);
+                    }
+                    
+                    // Estende w[16..63]
+                    for (let j = 16; j < 64; j++) {
+                        const s0 = this.rotr(w[j-15], 7) ^ this.rotr(w[j-15], 18) ^ (w[j-15] >>> 3);
+                        const s1 = this.rotr(w[j-2], 17) ^ this.rotr(w[j-2], 19) ^ (w[j-2] >>> 10);
+                        w[j] = (w[j-16] + s0 + w[j-7] + s1) & 0xffffffff;
+                    }
+                    
+                    // Inizializza le variabili di lavoro
+                    let [a, b, c, d, e, f, g, h_var] = h;
+                    
+                    // Ciclo principale
+                    for (let j = 0; j < 64; j++) {
+                        const S1 = this.rotr(e, 6) ^ this.rotr(e, 11) ^ this.rotr(e, 25);
+                        const ch = (e & f) ^ (~e & g);
+                        const temp1 = (h_var + S1 + ch + k[j] + w[j]) & 0xffffffff;
+                        const S0 = this.rotr(a, 2) ^ this.rotr(a, 13) ^ this.rotr(a, 22);
+                        const maj = (a & b) ^ (a & c) ^ (b & c);
+                        const temp2 = (S0 + maj) & 0xffffffff;
+                        
+                        h_var = g;
+                        g = f;
+                        f = e;
+                        e = (d + temp1) & 0xffffffff;
+                        d = c;
+                        c = b;
+                        b = a;
+                        a = (temp1 + temp2) & 0xffffffff;
+                    }
+                    
+                    // Aggiunge il chunk hash al risultato
+                    h[0] = (h[0] + a) & 0xffffffff;
+                    h[1] = (h[1] + b) & 0xffffffff;
+                    h[2] = (h[2] + c) & 0xffffffff;
+                    h[3] = (h[3] + d) & 0xffffffff;
+                    h[4] = (h[4] + e) & 0xffffffff;
+                    h[5] = (h[5] + f) & 0xffffffff;
+                    h[6] = (h[6] + g) & 0xffffffff;
+                    h[7] = (h[7] + h_var) & 0xffffffff;
+                }
+                
+                // Produce il digest finale
+                return h.map(x => x.toString(16).padStart(8, '0')).join('');
+            }
+            
+            // Rotazione a destra
+            rotr(n, b) {
+                return (n >>> b) | (n << (32 - b));
+            }
+            
+            // Genera salt casuale
+            generateSalt() {
+                const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+                let salt = '';
+                for (let i = 0; i < 32; i++) {
+                    salt += chars.charAt(Math.floor(Math.random() * chars.length));
+                }
+                return salt;
+            }
+            
+            // Hash sicuro con salt e iterazioni multiple
+            hashPassword(password) {
+                const salt = this.generateSalt();
+                let hash = password + salt;
+                
+                // Applica SHA-256 multiple volte per rallentare gli attacchi
+                for (let i = 0; i < this.iterations; i++) {
+                    hash = this.sha256(hash + salt + i);
+                }
+                
+                return `${this.iterations}:${salt}:${hash}`;
+            }
+            
+            // Verifica password
+            verifyPassword(password, storedHash) {
+                const parts = storedHash.split(':');
+                if (parts.length !== 3) {
+                    throw new Error('Formato hash non valido');
+                }
+                
+                const [iterations, salt, expectedHash] = parts;
+                let hash = password + salt;
+                
+                // Applica lo stesso numero di iterazioni
+                for (let i = 0; i < parseInt(iterations); i++) {
+                    hash = this.sha256(hash + salt + i);
+                }
+                
+                return this.secureCompare(hash, expectedHash);
+            }
+            
+            // Confronto sicuro contro timing attacks
+            secureCompare(a, b) {
+                if (a.length !== b.length) {
+                    return false;
+                }
+                
+                let result = 0;
+                for (let i = 0; i < a.length; i++) {
+                    result |= a.charCodeAt(i) ^ b.charCodeAt(i);
+                }
+                
+                return result === 0;
+            }
+        }
+		
+		let accessToken = '';
+        let currentFiscalCode = '';
+		let tesseraCode = '';
+		let currentCompanyId = '';
+        let selectedService = null;
+        let isLoggedIn = false;
+		let currentPrescriptionData = null;
+		let selectedAppointment = null;
+		let bookingResult = null;
+		let selectedCompanies = [];
+
+		// Inizializza il gestore password
+        const passwordManager = new SyncPasswordHasher();       
+
+        // Credenziali hardcoded
+        const ADMIN_USERNAME = 'admin';
+        //const ADMIN_PASSWORD = 'puglia2025';
+		const STORED_PASSWORD_HASH = '10000:pt8wlFs3Svyj0j9k0k2sAtkZkBcokJkL:0-4332e1-57fefb74270b4941-3ebd28cf48f30c013f600ea7028a0bc73cb48977';
+        
+
+        function showLoading() {
+            document.getElementById('loadingDiv').style.display = 'block';
+        }
+
+        function hideLoading() {
+            document.getElementById('loadingDiv').style.display = 'none';
+        }
+
+        function showMessage(message, type = 'error') {
+            const messageDiv = document.getElementById('messageDiv');
+            messageDiv.innerHTML = `<div class="${type}">${message}</div>`;
+            setTimeout(() => messageDiv.innerHTML = '', 20000);
+        }
+
+        function showSection(sectionIds) {
+			// Nasconde tutte le sezioni
+			document.querySelectorAll('.section').forEach(section => {
+				section.classList.add('hidden');
+			});
+
+			// Divide la stringa in un array ed elimina eventuali spazi vuoti
+			sectionIds.split(',').map(id => id.trim()).forEach(id => {
+				const section = document.getElementById(id);
+				if (section) {
+					section.classList.remove('hidden');
+				}
+			});
+		}
+
+        function handleInitialLoginKeyPress(event) {
+            if (event.key === 'Enter') {
+                initialLogin();
+            }
+        }
+
+        function initialLogin() {
+            const username = document.getElementById('adminUsername').value.trim();
+            const password = document.getElementById('adminPassword').value.trim();
+
+            if (!username || !password) {
+                showMessage('Inserisci username e password');
+                return;
+            }
+			
+			const isPasswordValid = passwordManager.verifyPassword(password, STORED_PASSWORD_HASH);
+
+            if (username === ADMIN_USERNAME && /*password === ADMIN_PASSWORD*/ isPasswordValid) {
+                isLoggedIn = true;
+                showMessage('Accesso amministrativo effettuato con successo!', 'success');
+                
+                // Nascondi la sezione di login iniziale
+                document.getElementById('initialLoginSection').classList.add('hidden');
+                
+                // Mostra la sezione di login sanitario
+                document.getElementById('loginSection').classList.remove('hidden');
+                
+                // Mostra il pulsante di logout
+                document.getElementById('logoutBtn').classList.remove('hidden');
+                
+                // Pulisci i campi
+                document.getElementById('adminUsername').value = '';
+                document.getElementById('adminPassword').value = '';
+            } else {
+                showMessage('Username o password non corretti');
+            }
+        }
+
+        function initialLogout() {
+            if (confirm('Sei sicuro di voler uscire dal sistema?')) {
+                isLoggedIn = false;
+                accessToken = '';
+                currentFiscalCode = '';
+				tesseraCode = '';
+                selectedService = null;
+				currentCompanyId = '';
+                
+                // Nascondi tutte le sezioni
+                document.querySelectorAll('.section').forEach(section => {
+                    section.classList.add('hidden');
+                });
+                
+                // Mostra solo la sezione di login iniziale
+                document.getElementById('initialLoginSection').classList.remove('hidden');
+                
+                // Nascondi il pulsante di logout
+                document.getElementById('logoutBtn').classList.add('hidden');
+                
+                // Pulisci tutti i campi
+                document.getElementById('fiscalCode').value = '';
+                document.getElementById('healthCard').value = '';
+                document.getElementById('serviceSearch').value = '';
+                document.getElementById('cupDate').value = '';
+                
+                // Pulisci i risultati
+                document.getElementById('serviceResults').innerHTML = '';
+                document.getElementById('appointmentResults').innerHTML = '';
+                
+                showMessage('Logout effettuato con successo', 'success');
+            }
+        }
+
+        async function login() {
+            if (!isLoggedIn) {
+                showMessage('Devi prima effettuare il login amministrativo');
+                return;
+            }
+
+            const fiscalCode = document.getElementById('fiscalCode').value.trim().toUpperCase();
+            const healthCard = document.getElementById('healthCard').value.trim();
+
+            if (!fiscalCode || !healthCard) {
+                showMessage('Inserisci tutti i campi richiesti');
+                return;
+            }
+
+            if (fiscalCode.length !== 16) {
+                showMessage('Il codice fiscale deve essere di 16 caratteri');
+                return;
+            }
+
+            showLoading();
+
+            try {
+                const response = await fetch('https://www.sanita.puglia.it/sanita-api/user/anonymous-login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        fiscalCode: fiscalCode,
+                        healthInsuranceCard: healthCard
+                    })
+                });
+
+                const data = await response.json();
+
+                if (response.ok && data.token) {
+                    // Estrai l'access_token dal campo token (che è una stringa JSON)
+                    const tokenData = JSON.parse(data.token);
+                    accessToken = tokenData.access_token;
+                    currentFiscalCode = fiscalCode;
+					tesseraCode = healthCard;
+
+                    showMessage(`Accesso paziente effettuato con successo! ${data.outcome.descr}`, 'success');
+                    
+                    // Mostra la sezione di ricerca
+                    document.getElementById('searchSection').classList.remove('hidden');
+                    
+                    // Nascondi la sezione login paziente
+                    document.getElementById('loginSection').classList.add('hidden');
+                } else {
+                    showMessage(data.outcome ? data.outcome.descr : 'Errore durante l\'accesso');
+                }
+            } catch (error) {
+                console.error('Errore durante il login:', error);
+                showMessage('Errore di connessione. Riprova più tardi.');
+            }
+
+            hideLoading();
+        }
+
+        function handleSearchKeyPress(event) {
+            if (event.key === 'Enter') {
+                searchServices();
+            }
+        }
+
+        async function searchServices() {
+			const searchTerm = document.getElementById('serviceSearch').value.trim();
+
+			if (!searchTerm) {
+				showMessage('Inserisci un termine di ricerca');
+				return;
+			}
+			
+			const resultsDiv = document.getElementById('serviceResults');
+			resultsDiv.innerHTML = '';
+			document.getElementById('availabilitySection').classList.add('hidden');
+
+			showLoading();
+
+			try {
+				// Verifica se il termine di ricerca è un NRE (formato numerico lungo)
+				const isNRE = /^\d{3}[A-Z]\d{11}$/.test(searchTerm);
+				
+				if (isNRE) {
+					// Ricerca per NRE
+					await searchByNRE(searchTerm);
+				} else {
+					// Ricerca normale per descrizione/codice
+					const response = await fetch(`https://www.sanita.puglia.it/sanita-api/health-services?regCatCodeDescr=${encodeURIComponent(searchTerm)}&deliveryType=SSN`, {
+						headers: {
+							'Authorization': `Bearer ${accessToken}`,
+							'Accept': 'application/json'
+						}
+					});
+
+					const services = await response.json();
+
+					if (response.ok && Array.isArray(services) && services.length > 0) {
+						displayServices(services);
+						document.getElementById('resultsSection').classList.remove('hidden');
+					} else {
+						showMessage('Nessuna prestazione trovata per il termine di ricerca');
+						document.getElementById('resultsSection').classList.add('hidden');
+					}
+					
+					document.getElementById('priority').disabled = false;
+					document.getElementById('priority').value = 'P';
+					document.getElementById('prescriptionNumber').value = '';
+				}
+			} catch (error) {
+				console.error('Errore durante la ricerca:', error);
+				showMessage('Errore durante la ricerca. Riprova più tardi.');
+			}
+
+			hideLoading();
+		}
+		
+		async function searchByNRE(nreNumber) {
+			try {
+				const url = `https://www.sanita.puglia.it/sanita-api/prescription/${nreNumber}/patient/${currentFiscalCode}/company/C160114/search?platform=WEB&accessMode=ANONIMO&functionality=PRENOTAZIONE_DEMATERIALIZZATA`;
+				
+				console.log('Ricerca per NRE:', url);
+				
+				const response = await fetch(url, {
+					headers: {
+						'Authorization': `Bearer ${accessToken}`,
+						'Accept': 'application/json'
+					}
+				});
+				
+				const prescriptionData = await response.json();
+				
+				if (response.ok && prescriptionData.prescriptionDetails && prescriptionData.prescriptionDetails[0]?.healthServicesCUP) {
+					// Converte i servizi della ricetta nel formato compatibile con displayServices
+					const services = prescriptionData.prescriptionDetails[0].healthServicesCUP.map(service => ({
+						descr: service.descr,
+						regionalCode: service.cupCode,
+						amount: service.amount || 0,
+						quantity: service.quantity || 1
+					}));
+					
+					// Seleziona automaticamente tutti i servizi trovati
+					selectedService = services;
+					
+					// Mostra i servizi
+					displayServices(services);
+					
+					// Pre-seleziona tutti i servizi visualizzati
+					setTimeout(() => {
+						document.querySelectorAll('.service-item').forEach(serviceDiv => {
+							serviceDiv.classList.add('selected');
+						});
+						updateSelectedServicesDisplay();
+						updateAvailabilityControls();
+					}, 100);
+					
+					// Compila automaticamente il campo NRE nella sezione ricetta
+					document.getElementById('prescriptionNumber').value = nreNumber;
+					
+					// Compila automaticamente il campo Priorita e disabilità
+					document.getElementById('priority').value = prescriptionData.priority;
+					document.getElementById('priority').disabled = true;
+					
+					document.getElementById('resultsSection').classList.remove('hidden');
+					showMessage(`✅ Trovate ${services.length} prestazioni per l'NRE inserito. Tutte le prestazioni sono state selezionate automaticamente.`, 'success');
+					
+				} else {
+					console.error('Errore API NRE:', prescriptionData);
+					showMessage('NRE non trovato o non valido: ' + (prescriptionData.outcome?.descr || 'Ricetta non trovata'));
+					document.getElementById('resultsSection').classList.add('hidden');
+				}
+			} catch (error) {
+				console.error('Errore durante la ricerca NRE:', error);
+				showMessage('Errore durante la ricerca dell\'NRE. Riprova più tardi.');
+			}
+		}
+
+        function displayServices(services) {
+            const resultsDiv = document.getElementById('serviceResults');
+            resultsDiv.innerHTML = '';
+
+            services.forEach(service => {
+                const serviceDiv = document.createElement('div');
+                serviceDiv.className = 'service-item';
+                serviceDiv.onclick = () => selectService(service, serviceDiv);
+                
+                serviceDiv.innerHTML = `
+                    <div class="service-description">${service.descr}</div>
+                    <div class="service-code">Codice: ${service.regionalCode}</div>
+                `;
+                
+                resultsDiv.appendChild(serviceDiv);
+            });
+        }
+
+        function selectService(service, element) {
+			// Toggle della selezione invece di rimuovere tutte le precedenti
+			if (element.classList.contains('selected')) {
+				element.classList.remove('selected');
+				// Rimuovi il servizio dall'array dei servizi selezionati
+				removeServiceFromSelection(service);
+			} else {
+				element.classList.add('selected');
+				// Aggiungi il servizio all'array dei servizi selezionati
+				addServiceToSelection(service);
+			}
+
+			updateSelectedServicesDisplay();
+			updateAvailabilityControls();
+		}
+
+		function addServiceToSelection(service) {
+			if (!selectedService) {
+				selectedService = [service];
+			} else if (Array.isArray(selectedService)) {
+				// Verifica che non sia già presente
+				if (!selectedService.find(s => s.regionalCode === service.regionalCode)) {
+					selectedService.push(service);
+				}
+			} else {
+				// Converti in array se era un singolo servizio
+				if (selectedService.regionalCode !== service.regionalCode) {
+					selectedService = [selectedService, service];
+				}
+			}
+		}
+
+		function removeServiceFromSelection(service) {
+			if (selectedService && Array.isArray(selectedService)) {
+				selectedService = selectedService.filter(s => s.regionalCode !== service.regionalCode);
+				if (selectedService.length === 0) {
+					selectedService = null;
+				}
+			} else if (selectedService && selectedService.regionalCode === service.regionalCode) {
+				selectedService = null;
+			}
+		}
+
+		function updateSelectedServicesDisplay() {
+			const recapDiv = document.getElementById('selectedServicesRecap');
+			const listDiv = document.getElementById('selectedServicesList');
+			const countSpan = document.getElementById('selectedCount');
+			
+			if (!selectedService || (Array.isArray(selectedService) && selectedService.length === 0)) {
+				recapDiv.classList.add('hidden');
+				return;
+			}
+			
+			const services = Array.isArray(selectedService) ? selectedService : [selectedService];
+			
+			listDiv.innerHTML = '';
+			
+			services.forEach(service => {
+				const serviceDiv = document.createElement('div');
+				serviceDiv.className = 'selected-service-item';
+				serviceDiv.innerHTML = `
+					<div class="selected-service-info">
+						<div class="selected-service-description">${service.descr}</div>
+						<div class="selected-service-code">Codice: ${service.regionalCode}</div>
+					</div>
+					<button class="remove-service-btn" onclick="removeSelectedService('${service.regionalCode}')">
+						🗑️ Rimuovi
+					</button>
+				`;
+				listDiv.appendChild(serviceDiv);
+			});
+			
+			countSpan.textContent = `${services.length} prestazione${services.length > 1 ? 'i' : ''} selezionata${services.length > 1 ? 'e' : ''}`;
+			recapDiv.classList.remove('hidden');
+		}
+
+		function removeSelectedService(regionalCode) {
+			// Trova e deseleziona l'elemento nella lista delle prestazioni
+			const serviceElements = document.querySelectorAll('.service-item');
+			serviceElements.forEach(element => {
+				const codeElement = element.querySelector('.service-code');
+				if (codeElement && codeElement.textContent.includes(regionalCode)) {
+					element.classList.remove('selected');
+				}
+			});
+			
+			// Rimuovi dalla selezione
+			if (selectedService && Array.isArray(selectedService)) {
+				selectedService = selectedService.filter(s => s.regionalCode !== regionalCode);
+				if (selectedService.length === 0) {
+					selectedService = null;
+				}
+			} else if (selectedService && selectedService.regionalCode === regionalCode) {
+				selectedService = null;
+			}
+			
+			updateSelectedServicesDisplay();
+			updateAvailabilityControls();
+		}
+
+		function clearAllSelections() {
+			// Deseleziona tutti gli elementi nella lista delle prestazioni
+			document.querySelectorAll('.service-item.selected').forEach(element => {
+				element.classList.remove('selected');
+			});
+			
+			selectedService = null;
+			updateSelectedServicesDisplay();
+			updateAvailabilityControls();
+		}
+
+		function updateAvailabilityControls() {
+			const availabilityControls = document.getElementById('availabilityControls');
+			const hasSelection = selectedService && (Array.isArray(selectedService) ? selectedService.length > 0 : true);
+			
+			if (hasSelection) {
+				availabilityControls.classList.remove('hidden');
+				
+				// Imposta la data minima come oggi
+				const today = new Date();
+				const todayString = today.toISOString().split('T')[0];
+				const cupDateInput = document.getElementById('cupDate');
+				cupDateInput.min = todayString;
+				
+				// Imposta la data di default come oggi
+				if (!cupDateInput.value) {
+					cupDateInput.value = todayString;
+				}
+			} else {
+				availabilityControls.classList.add('hidden');
+			}
+		}
+
+        // Funzioni placeholder per gli altri eventi
+        function clearAllSelections() {
+            console.log('Rimuovi tutte le selezioni');
+        }
+
+        // Versione modificata della funzione checkAvailability
+        async function checkAvailability() {
+            if (!selectedService) {
+                showMessage('Seleziona prima almeno una prestazione');
+                return;
+            }
+            
+            const cupDateInput = document.getElementById('cupDate');
+            const cupDateToInput = document.getElementById('cupDateTo');
+            const prioritySelect = document.getElementById('priority');
+            const recursiveSearchCheckbox = document.getElementById('recursiveSearch');
+            const excludeStructuresInput = document.getElementById('excludeStructures');
+            
+            if (!cupDateInput.value) {
+                showMessage('Seleziona una data di inizio ricerca');
+                return;
+            }
+            
+            // Validazione aziende selezionate
+            if (selectedCompanies.length === 0) {
+                showMessage('Seleziona almeno una azienda ospedaliera');
+                return;
+            }
+            
+            // Validazione date
+            if (cupDateToInput.value && cupDateInput.value > cupDateToInput.value) {
+                showMessage('La data di fine deve essere successiva alla data di inizio');
+                return;
+            }
+            
+            const appointmentsDiv = document.getElementById('appointmentResults');
+            appointmentsDiv.innerHTML = '';
+            showLoading();
+            
+            try {
+                const searchParams = {
+                    startDate: cupDateInput.value,
+                    endDate: cupDateToInput.value || null,
+                    priority: prioritySelect.value,
+                    recursive: recursiveSearchCheckbox.checked,
+                    excludeStructures: excludeStructuresInput.value.trim(),
+                    companyCodes: getSelectedCompanyCodes() // Aggiungi i codici delle aziende selezionate
+                };
+                
+                await performAvailabilitySearch(searchParams);
+                
+            } catch (error) {
+                console.error('Errore durante il controllo disponibilità:', error);
+                showMessage('Errore durante il controllo delle disponibilità. Riprova più tardi.');
+            }
+            
+            hideLoading();
+        }
+
+        // Versione modificata della funzione performAvailabilitySearch
+        async function performAvailabilitySearch(searchParams, attemptNumber = 1) {
+            const today = new Date();
+            const cupDate = searchParams.startDate;
+            const selectedPriority = searchParams.priority;
+            const prescriptionDate = today.toISOString().split('T')[0].replace(/-/g, '');
+            
+            // Gestisci sia singola selezione che selezioni multiple
+            const services = Array.isArray(selectedService) ? selectedService : [selectedService];
+            const regionalCodes = services.map(service => service.regionalCode).join(',');
+            
+            // Usa i codici delle aziende selezionate invece di quelli hardcoded
+            const companyCodes = searchParams.companyCodes;
+            
+            const url = `https://www.sanita.puglia.it/sanita-api/appointments/patient/${currentFiscalCode}?healthServicesRegCodes=${regionalCodes}&deliveryType=SSN&companyCodes=${companyCodes}&priority=${selectedPriority}&exemption=&cupDate=${cupDate}&prescriptionDate=${prescriptionDate}&platform=WEB&accessMode=ANONIMO&functionality=PRENOTAZIONE_DEMATERIALIZZATA`;
+            
+            console.log(`Tentativo ${attemptNumber} - URL chiamata:`, url);
+            console.log('Parametri ricerca:', searchParams);
+            
+            const response = await fetch(url, {
+                headers: {
+                    'Authorization': `Bearer ${accessToken}`,
+                    'Accept': 'application/json'
+                }
+            });
+            
+            const appointments = await response.json();
+            
+            if (response.ok) {
+                // Filtra gli appuntamenti in base ai parametri di ricerca
+                let filteredAppointments = filterAppointments(appointments.appointmentsList, searchParams);
+                
+                if (filteredAppointments.length === 0 && searchParams.recursive && attemptNumber < 10000) {
+                    showMessage(`Ricerca ricorsiva in corso... tentativo ${attemptNumber + 1}`, 'info');
+                    
+                    return await performAvailabilitySearch(searchParams, attemptNumber + 1);
+                }
+                
+                if (filteredAppointments.length > 0) {
+                    if(searchParams.recursive){
+                        playBeep(); // Beep!
+                    }
+
+                    displayAppointments(filteredAppointments, services);
+                    document.getElementById('availabilitySection').classList.remove('hidden');
+                    
+                    if (attemptNumber > 1) {
+                        showMessage(`Disponibilità trovata dopo ${attemptNumber} tentativi di ricerca ricorsiva`, 'success');
+                    }
+                }else {
+                    if (searchParams.recursive && attemptNumber >= 10000) {
+                        showMessage('Ricerca ricorsiva completata. Nessuna disponibilità trovata dopo 10000 tentativi', 'info');
+                    } else {
+                        showMessage('Nessuna disponibilità trovata nel periodo specificato');
+                    }
+                }
+            } else {
+                console.error('Errore API:', appointments);
+                showMessage('Errore durante il recupero delle disponibilità: Nessuna disponibilità rilevata');
+            }
+        }
+
+		function filterAppointments(appointments, searchParams) {
+			if (!appointments || !Array.isArray(appointments)) {
+				return [];
+			}
+			
+			return appointments.filter(appointment => {
+				// Filtra per intervallo di date se specificato
+				if (searchParams.endDate) {
+					const parts = appointment.date.split('/');
+					const appointmentDate = new Date(`${parts[2]}-${parts[1]}-${parts[0]}`);
+					const endDate = new Date(searchParams.endDate);
+					
+					if (appointmentDate > endDate) {
+						return false;
+					}
+				}
+				
+				// Filtra per esclusione strutture se specificato
+				if (searchParams.excludeStructures) {
+					const structureName = (appointment.location || '').toLowerCase();
+					const excludeTexts = searchParams.excludeStructures
+						.toLowerCase()
+						.split(',')
+						.map(text => text.trim());
+
+					for (const excludeText of excludeTexts) {
+						if (structureName.includes(excludeText)) {
+							return false;
+						}
+					}
+				}
+				
+				return true;
+			});
+		}
+		
+		function playBeep() {
+			const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+			for (let i = 0; i < 3; i++) {
+				const startTime = audioCtx.currentTime + i * 0.4; // 0.4s tra i beep
+				const oscillator = audioCtx.createOscillator();
+				const gainNode = audioCtx.createGain();
+
+				oscillator.type = 'sine';
+				oscillator.frequency.setValueAtTime(880, startTime);
+				gainNode.gain.setValueAtTime(0.1, startTime);
+
+				oscillator.connect(gainNode);
+				gainNode.connect(audioCtx.destination);
+
+				oscillator.start(startTime);
+				oscillator.stop(startTime + 0.3); // ciascun beep dura 0.3s
+			}
+		}
+
+        function displayAppointments(appointmentsData, services) {
+			const appointmentsDiv = document.getElementById('appointmentResults');
+			appointmentsDiv.innerHTML = '';
+
+			// Verifica se ci sono appuntamenti disponibili
+			if (!appointmentsData || appointmentsData.length === 0) {
+				appointmentsDiv.innerHTML = '<div class="error">Nessuna disponibilità trovata per le prestazioni selezionate.</div>';
+				return;
+			}
+
+			let appointments = appointmentsData;
+			
+			window.availableAppointments = appointments;
+			
+			// Ordina gli appuntamenti per data e ora
+			appointments.sort((a, b) => {
+				const dateA = parseDate(a.date, a.time);
+				const dateB = parseDate(b.date, b.time);
+				return dateA - dateB;
+			});
+
+			// Crea l'intestazione con le prestazioni selezionate
+			const servicesList = services.map(service => service.descr).join(' • ');
+			const servicesCount = services.length;
+			
+			appointmentsDiv.innerHTML = `
+				<h3>Prestazione${servicesCount > 1 ? 'i' : ''}: ${servicesList}</h3>
+				<p style="color: #7f8c8d; margin-bottom: 20px;">
+					🔍 Clicca su un appuntamento per vedere i dettagli • 
+					📅 Ricerca dal: ${document.getElementById('cupDate').value} • 
+					🎯 ${servicesCount} prestazione${servicesCount > 1 ? 'i' : ''} selezionata${servicesCount > 1 ? 'e' : ''}
+				</p>
+			`;
+
+			appointments.forEach((appointment, index) => {
+				const appointmentDiv = document.createElement('div');
+				appointmentDiv.className = 'appointment-item';
+				appointmentDiv.onclick = () => toggleAppointmentDetails(appointmentDiv, index);
+				
+				// Estrai informazioni sui servizi sanitari
+				const healthService = appointment.healthServicesCUP && appointment.healthServicesCUP.length > 0 
+					? appointment.healthServicesCUP[0] 
+					: null;
+				
+				// Trova quale prestazione corrisponde a questo appuntamento
+				const matchingService = services.find(service => 
+					healthService && healthService.cupCode === service.regionalCode
+				);
+				const serviceDescription = matchingService ? matchingService.descr : 'Prestazione non identificata';
+				
+				appointmentDiv.innerHTML = `
+					<div class="appointment-header">
+						<div>
+							<div class="appointment-datetime">📅 ${appointment.date} • ⏰ ${appointment.time}</div>
+							<div class="appointment-location">🏥 ${appointment.location}</div>
+							<div class="appointment-summary">
+								🩺 ${serviceDescription} • 
+								${healthService ? `💰 €${healthService.amount}` : ''} • 
+								📍 ${appointment.unity.split(' - ')[0]}
+							</div>
+						</div>
+						<div class="expand-indicator">▼</div>
+					</div>
+					<div class="appointment-details" id="details-${index}">
+						<div><strong>🩺 Prestazione:</strong> ${serviceDescription}</div>
+						<div><strong>🏥 Struttura completa:</strong> ${appointment.location}</div>
+						<div><strong>📋 Indirizzo completo:</strong> ${appointment.address}</div>
+						${appointment.doctor ? `<div><strong>👨‍⚕️ Medico:</strong> ${appointment.doctor}</div>` : ''}
+						<div><strong>🎫 Priorità:</strong> ${getReservationType(appointment.reservationType)}</div>
+						${healthService ? `
+							<div><strong>🏷️ Codice prestazione:</strong> ${healthService.cupCode}</div>
+							<div><strong>💰 Costo totale:</strong> €${healthService.amount}</div>
+							<div><strong>📞 Numero CUP:</strong> ${healthService.cupPhone}</div>
+							<div><strong>📦 Quantità:</strong> ${healthService.quantita}</div>
+							${healthService.noteOperatore ? `<div><strong>📝 Note importanti:</strong> <em>${healthService.noteOperatore}</em></div>` : ''}
+							${healthService.preparationMethod ? `<div><strong>🔬 Preparazione:</strong> ${healthService.preparationMethod}</div>` : ''}
+						` : ''}
+						<div><strong>⏰ Ultimo giorno per disdetta:</strong> ${formatCancellationDate(appointment.lastDateCancellation)}</div>
+					</div>
+				`;
+				
+				appointmentsDiv.appendChild(appointmentDiv);
+			});
+			
+			addBookingButtonToAppointments();
+		}
+
+        function parseDate(dateStr, timeStr) {
+            // Converte "16/01/2026" e "09:30" in oggetto Date
+            const dateParts = dateStr.split('/');
+            const timeParts = timeStr.split(':');
+            return new Date(
+                parseInt(dateParts[2]), // anno
+                parseInt(dateParts[1]) - 1, // mese (0-based)
+                parseInt(dateParts[0]), // giorno
+                parseInt(timeParts[0]), // ora
+                parseInt(timeParts[1]) // minuti
+            );
+        }
+
+        function getReservationType(type) {
+            switch(type) {
+                case 'P': return 'Programmata';
+                case 'U': return 'Urgente';
+                case 'D': return 'Differibile';
+                default: return type;
+            }
+        }
+
+        function toggleAppointmentDetails(appointmentDiv, index) {
+            const detailsDiv = document.getElementById(`details-${index}`);
+            const indicator = appointmentDiv.querySelector('.expand-indicator');
+            
+            // Toggle della classe expanded
+            const isExpanded = detailsDiv.classList.contains('expanded');
+            
+            if (isExpanded) {
+                detailsDiv.classList.remove('expanded');
+                indicator.classList.remove('expanded');
+                appointmentDiv.classList.remove('expanded');
+            } else {
+                // Chiudi tutti gli altri appuntamenti aperti
+                document.querySelectorAll('.appointment-details.expanded').forEach(detail => {
+                    detail.classList.remove('expanded');
+                });
+                document.querySelectorAll('.expand-indicator.expanded').forEach(ind => {
+                    ind.classList.remove('expanded');
+                });
+                document.querySelectorAll('.appointment-item.expanded').forEach(item => {
+                    item.classList.remove('expanded');
+                });
+                
+                // Apri l'appuntamento corrente
+                detailsDiv.classList.add('expanded');
+                indicator.classList.add('expanded');
+                appointmentDiv.classList.add('expanded');
+            }
+        }
+
+        function formatCancellationDate(dateString) {
+            if (!dateString) return 'Non specificato';
+            
+            // Il formato è "20260114 09:30"
+            const date = dateString.substring(0, 8);
+            const time = dateString.substring(9);
+            
+            const year = date.substring(0, 4);
+            const month = date.substring(4, 6);
+            const day = date.substring(6, 8);
+            
+            return `${day}/${month}/${year} ${time}`;
+        }
+
+		// Funzione da aggiungere alla fine del displayAppointments
+		function addBookingButtonToAppointments() {
+			const appointments = document.querySelectorAll('.appointment-item');
+			appointments.forEach((appointmentDiv, index) => {
+				// Controlla se il pulsante è già presente
+				if (!appointmentDiv.querySelector('.book-appointment-btn')) {
+					const bookButton = document.createElement('button');
+					bookButton.className = 'btn book-appointment-btn';
+					bookButton.style.cssText = 'margin-top: 15px; width: 100%; background: linear-gradient(135deg, #27ae60 0%, #2ecc71 100%);';
+					bookButton.innerHTML = '📅 Prenota Questo Appuntamento';
+					bookButton.onclick = (e) => {
+						e.stopPropagation();
+						selectAppointmentForBooking(index);
+					};
+					
+					const detailsDiv = appointmentDiv.querySelector('.appointment-details');
+					if (detailsDiv) {
+						detailsDiv.appendChild(bookButton);
+					}
+				}
+			});
+		}
+
+		// Funzione per selezionare un appuntamento per la prenotazione
+		function selectAppointmentForBooking(appointmentIndex) {
+			const appointmentsData = document.querySelector('#appointmentResults');
+			if (!appointmentsData) return;
+			
+			// Salva l'indice dell'appuntamento selezionato
+			selectedAppointment = appointmentIndex;
+			
+			// Mostra la sezione per inserire il numero di ricetta
+			showSection('prescriptionSection');
+			
+			showMessage('Inserisci il numero della ricetta per procedere con la prenotazione', 'success');
+		}
+
+		function handlePrescriptionKeyPress(event) {
+			if (event.key === 'Enter') {
+				searchPrescription();
+			}
+		}
+
+		function backToAvailability() {
+			showSection('searchSection,resultsSection,availabilitySection');
+			selectedAppointment = null;
+		}
+
+		function backToPrescription() {
+			showSection('prescriptionSection');
+			currentPrescriptionData = null;
+		}
+
+		async function searchPrescription() {
+			const prescriptionNumber = document.getElementById('prescriptionNumber').value.trim();
+			
+			if (!prescriptionNumber) {
+				showMessage('Inserisci il numero della ricetta');
+				return;
+			}
+			
+			if (prescriptionNumber.length < 10) {
+				showMessage('Il numero della ricetta sembra troppo corto');
+				return;
+			}
+			
+			showLoading();
+			
+			try {
+				// Costruisci l'URL con i parametri corretti
+				const url = `https://www.sanita.puglia.it/sanita-api/prescription/${prescriptionNumber}/patient/${currentFiscalCode}/company/C160114/search?platform=WEB&accessMode=ANONIMO&functionality=PRENOTAZIONE_DEMATERIALIZZATA`;
+				
+				console.log('URL ricerca ricetta:', url);
+				
+				const response = await fetch(url, {
+					headers: {
+						'Authorization': `Bearer ${accessToken}`,
+						'Accept': 'application/json'
+					}
+				});
+				
+				const prescriptionData = await response.json();
+				
+				if (response.ok) {
+					currentPrescriptionData = prescriptionData;
+					validatePrescription(prescriptionData);
+				} else {
+					console.error('Errore API ricetta:', prescriptionData);
+					showMessage('Errore durante la ricerca della ricetta: ' + (prescriptionData.message || prescriptionData.outcome?.descr || 'Ricetta non trovata'));
+				}
+			} catch (error) {
+				console.error('Errore durante la ricerca ricetta:', error);
+				showMessage(currentPrescriptionData.outcome.descr);
+			}
+			
+			hideLoading();
+		}
+
+		function validatePrescription(prescriptionData) {
+			const validationDiv = document.getElementById('prescriptionValidationResults');
+			validationDiv.innerHTML = '';
+			
+			console.log('Dati ricetta ricevuti:', prescriptionData);
+			
+			// Verifica la struttura dei dati
+			if (!prescriptionData || !prescriptionData.prescriptionDetails[0].healthServicesCUP) {
+				validationDiv.innerHTML = `
+					<div class="error">
+						<h3>❌ Ricetta non valida</h3>
+						<p>${prescriptionData.outcome.descr || 'La ricetta non contiene prestazioni sanitarie valide.'}</p>
+					</div>
+				`;
+				showSection('prescriptionValidationSection');
+				return;
+			}
+			
+			const prescriptionServices = prescriptionData.prescriptionDetails[0].healthServicesCUP;
+			const selectedServices = Array.isArray(selectedService) ? selectedService : [selectedService];
+			
+			// Crea una mappa dei servizi nella ricetta per codice regionale
+			const prescriptionServiceMap = new Map();
+			prescriptionServices.forEach(service => {
+				prescriptionServiceMap.set(service.cupCode, service);
+			});
+			
+			// Verifica corrispondenza
+			const matchingServices = [];
+			const missingServices = [];
+			
+			selectedServices.forEach(selected => {
+				if (prescriptionServiceMap.has(selected.regionalCode)) {
+					matchingServices.push({
+						selected: selected,
+						prescription: prescriptionServiceMap.get(selected.regionalCode)
+					});
+				} else {
+					missingServices.push(selected);
+				}
+			});
+			
+			// Trova servizi nella ricetta non selezionati
+			const extraServices = prescriptionServices.filter(ps => 
+				!selectedServices.some(ss => ss.regionalCode === ps.cupCode)
+			);
+			
+			// Genera il report di validazione
+			let validationHTML = `
+				<div class="prescription-info">
+					<h3>📋 Informazioni Ricetta</h3>
+					<div style="background: rgba(255,255,255,0.7); padding: 15px; border-radius: 10px; margin: 15px 0;">
+						<div><strong>Numero Ricetta:</strong> ${prescriptionData.number || 'Non specificato'}</div>
+						<div><strong>Data Prescrizione:</strong> ${formatPrescriptionDate(prescriptionData.date)}</div>
+						<div><strong>Totale Prestazioni in Ricetta:</strong> ${prescriptionServices.length}</div>
+					</div>
+				</div>
+			`;
+			
+			if (matchingServices.length > 0) {
+				validationHTML += `
+					<div class="success">
+						<h3>✅ Prestazioni Corrispondenti (${matchingServices.length})</h3>
+						${matchingServices.map(match => `
+							<div style="margin: 10px 0; padding: 10px; background: rgba(255,255,255,0.5); border-radius: 5px;">
+								<strong>${match.selected.descr}</strong><br>
+								<small>Codice: ${match.selected.regionalCode} | Quantità: ${match.prescription.quantity || 1}</small>
+							</div>
+						`).join('')}
+					</div>
+				`;
+			}
+			
+			if (missingServices.length > 0) {
+				validationHTML += `
+					<div class="error">
+						<h3>❌ Prestazioni Selezionate NON Presenti in Ricetta (${missingServices.length})</h3>
+						<p>Le seguenti prestazioni selezionate non sono presenti nella ricetta:</p>
+						${missingServices.map(service => `
+							<div style="margin: 10px 0; padding: 10px; background: rgba(255,255,255,0.5); border-radius: 5px;">
+								<strong>${service.descr}</strong><br>
+								<small>Codice: ${service.regionalCode}</small>
+							</div>
+						`).join('')}
+					</div>
+				`;
+			}
+			
+			if (extraServices.length > 0) {
+				validationHTML += `
+					<div style="background: #fff3cd; border: 1px solid #ffeaa7; color: #856404; padding: 15px; border-radius: 10px; margin: 15px 0;">
+						<h3>⚠️ Prestazioni Aggiuntive in Ricetta (${extraServices.length})</h3>
+						<p>La ricetta contiene altre prestazioni non selezionate:</p>
+						${extraServices.map(service => `
+							<div style="margin: 10px 0; padding: 10px; background: rgba(255,255,255,0.5); border-radius: 5px;">
+								<strong>${service.descr}</strong><br>
+								<small>Codice: ${service.regionalCode} | Quantità: ${service.quantity || 1}</small>
+							</div>
+						`).join('')}
+					</div>
+				`;
+			}
+			
+			validationDiv.innerHTML = validationHTML;
+			
+			// Abilita/disabilita il pulsante di procedura
+			const proceedBtn = document.getElementById('proceedToBookingBtn');
+			if (matchingServices.length > 0 && missingServices.length === 0) {
+				proceedBtn.disabled = false;
+				proceedBtn.innerHTML = '📅 Procedi alla Prenotazione';
+				showMessage('✅ Validazione completata! Tutte le prestazioni selezionate sono presenti nella ricetta.', 'success');
+			} else if (missingServices.length > 0) {
+				proceedBtn.disabled = true;
+				proceedBtn.innerHTML = '❌ Impossibile Procedere';
+				showMessage('❌ Alcune prestazioni selezionate non sono presenti nella ricetta. Modifica la selezione o usa una ricetta diversa.', 'error');
+			} else {
+				proceedBtn.disabled = true;
+				proceedBtn.innerHTML = '❌ Nessuna Corrispondenza';
+				showMessage('❌ Nessuna delle prestazioni selezionate è presente nella ricetta.', 'error');
+			}
+			
+			showSection('prescriptionValidationSection');
+		}
+
+		function formatPrescriptionDate(dateString) {
+			if (!dateString) return 'Non specificata';
+			
+			// Formato potrebbe essere YYYYMMDD o già formattato
+			if (dateString.length === 8) {
+				const year = dateString.substring(0, 4);
+				const month = dateString.substring(4, 6);
+				const day = dateString.substring(6, 8);
+				return `${day}/${month}/${year}`;
+			}
+			
+			return dateString;
+		}
+
+		function proceedToBooking() {
+			if (!currentPrescriptionData || selectedAppointment === null) {
+				showMessage('Errore: dati mancanti per la prenotazione');
+				return;
+			}
+			
+			// Vai alla sezione per inserire i dati di contatto
+			showSection('contactDataSection');
+		}
+		
+		async function performActualBooking(phoneNumber, emailAddress) {
+			if (!currentPrescriptionData || selectedAppointment === null) {
+				showMessage('Errore: dati mancanti per la prenotazione');
+				return;
+			}
+			
+			try {			
+				showLoading();
+				showMessage('⏳ Prenotazione in corso...', 'info');
+				
+				const selectedAvailability = window.availableAppointments[selectedAppointment];
+				currentCompanyId = 'C'+selectedAvailability.companyCode;
+				
+				// 1. Prima chiamata: ottenere i dati del paziente
+				const patientResponse = await fetch(
+					`https://www.sanita.puglia.it/sanita-api/patient-identification/${currentFiscalCode}/company/${currentCompanyId}?platform=WEB&functionality=PRENOTAZIONE_DEMATERIALIZZATA&accessMode=ANONIMO`,
+					{
+						method: 'GET',
+						headers: {
+							'Accept': 'application/json',
+							'Content-Type': 'application/json',
+							'Authorization': `Bearer ${accessToken}`
+						}
+					}
+				);
+				
+				if (!patientResponse.ok) {
+					throw new Error(`Errore nell'identificazione paziente: ${patientResponse.status}`);
+				}
+				
+				const patientData = await patientResponse.json();
+				patientData.healthInsuranceCard = tesseraCode;
+				patientData.email = emailAddress || null; // Usa l'email inserita o null
+				patientData.phone = phoneNumber; // Usa il telefono inserito
+				
+				// 2. Ottieni l'appuntamento selezionato dalle disponibilità mostrate
+				const appointmentElements = document.querySelectorAll('.appointment-item');
+				if (!appointmentElements[selectedAppointment]) {
+					throw new Error('Appuntamento selezionato non trovato');
+				}
+				
+				// Estrai i dati dell'appuntamento dalla risposta precedente
+				if (!window.availableAppointments || !window.availableAppointments[selectedAppointment]) {
+					throw new Error('Dati appuntamento non disponibili');
+				}
+				
+				
+				const prescriptionNumber = document.getElementById('prescriptionNumber').value.trim();
+				
+				// 3. Preparare i dati per la prenotazione secondo la struttura attesa
+				const bookingData = {
+					appointments: [selectedAvailability],
+					demandingNumberE: prescriptionNumber,
+					demandingNumberR: null,
+					demandingDate: currentPrescriptionData.date,
+					userInfo: patientData,
+					quantity: '1'
+				};
+				
+				console.log('Dati prenotazione:', bookingData);
+				
+				// 4. Seconda chiamata: effettuare la prenotazione
+				const bookingResponse = await fetch(
+					'https://www.sanita.puglia.it/sanita-api/reservation/register?platform=WEB&accessMode=ANONIMO&functionality=PRENOTAZIONE_DEMATERIALIZZATA',
+					{
+						method: 'POST',
+						headers: {
+							'Accept': 'application/json',
+							'Content-Type': 'application/json',
+							'Authorization': `Bearer ${accessToken}`
+						},
+						body: JSON.stringify(bookingData)
+					}
+				);
+				
+				if (!bookingResponse.ok) {
+					const errorData = await bookingResponse.json();
+					throw new Error(`Errore nella prenotazione: ${errorData.message || bookingResponse.status}`);
+				}
+				
+				bookingResult = await bookingResponse.json();
+				
+				// 5. Mostrare il risultato della prenotazione
+				showMessage('✅ Prenotazione completata con successo!', 'success');
+				
+				// Log per debug
+				console.log('Risultato prenotazione:', bookingResult);
+				
+				// Opzionale: mostra i dettagli della prenotazione confermata
+				if (bookingResult.number) {
+					showMessage(`✅ Prenotazione confermata! Numero: ${bookingResult.number}`, 'success');
+					
+					// 6. Download del reminder PDF
+					try {
+						showMessage('⏳ Download reminder in corso...', 'info');
+						
+						const reminderResponse = await fetch(
+							`https://www.sanita.puglia.it/sanita-api/reservation/${bookingResult.number}/patient/${currentFiscalCode}/company/${currentCompanyId}/download-reminder?platform=WEB&functionality=GESTIONE_PRENOTAZIONI&accessMode=ANONIMO`,
+							{
+								method: 'GET',
+								headers: {
+									'Accept': 'application/json',
+									'Content-Type': 'application/json',
+									'Authorization': `Bearer ${accessToken}`
+								}
+							}
+						);
+						
+						if (!reminderResponse.ok) {
+							throw new Error(`Errore nel download reminder: ${reminderResponse.status}`);
+						}
+						
+						const reminderData = await reminderResponse.json();
+						
+						if (reminderData.outcome && reminderData.outcome.code === 'OK' && reminderData.reminder) {
+							// Converti il base64 in blob e scarica il PDF
+							const pdfData = atob(reminderData.reminder);
+							const pdfBytes = new Uint8Array(pdfData.length);
+							for (let i = 0; i < pdfData.length; i++) {
+								pdfBytes[i] = pdfData.charCodeAt(i);
+							}
+							
+							const blob = new Blob([pdfBytes], { type: 'application/pdf' });
+							const url = window.URL.createObjectURL(blob);
+							
+							// Crea un link temporaneo per il download
+							const downloadLink = document.createElement('a');
+							downloadLink.href = url;
+							downloadLink.download = `prenotazione_${bookingResult.number}.pdf`;
+							document.body.appendChild(downloadLink);
+							downloadLink.click();
+							document.body.removeChild(downloadLink);
+							
+							// Rilascia l'URL oggetto
+							window.URL.revokeObjectURL(url);
+							
+							showMessage('📄 Reminder PDF scaricato con successo!', 'success');
+						} else {
+							console.warn('Reminder non disponibile o errore nella risposta:', reminderData);
+							showMessage('⚠️ Reminder non disponibile al momento', 'warning');
+						}
+						
+					} catch (reminderError) {
+						console.error('Errore nel download del reminder:', reminderError);
+						showMessage(`⚠️ Errore nel download del reminder: ${reminderError.message}`, 'warning');
+					}
+					
+					// 7. Aggiorna il pulsante per permettere la cancellazione
+					const bookingButton = document.querySelector('.btn[onclick*="validateContactAndProceed"]');
+					if (bookingButton) {
+						bookingButton.textContent = '❌ Cancella Prenotazione';
+						bookingButton.onclick = cancelBooking;
+					}
+					
+				}
+				
+			} catch (error) {
+				console.error('Errore durante la prenotazione:', error);
+				showMessage(`Errore durante la prenotazione: ${error.message}`, 'error');
+			} finally {
+				hideLoading();
+			}
+		}
+		
+		function handleContactKeyPress(event) {
+			if (event.key === 'Enter') {
+				validateContactAndProceed();
+			}
+		}
+
+		function backToPrescriptionValidation() {
+			showSection('prescriptionValidationSection');
+		}
+
+		function validateContactAndProceed() {
+			const phoneNumber = document.getElementById('phoneNumber').value.trim();
+			const emailAddress = document.getElementById('emailAddress').value.trim();
+			
+			// Validazione telefono (obbligatorio)
+			if (!phoneNumber) {
+				showMessage('Il numero di telefono è obbligatorio');
+				return;
+			}
+			
+			// Validazione formato telefono (minimo 8 cifre, massimo 15)
+			const phoneRegex = /^[0-9+\-\s]{8,15}$/;
+			if (!phoneRegex.test(phoneNumber.replace(/\s/g, ''))) {
+				showMessage('Inserisci un numero di telefono valido (8-15 cifre)');
+				return;
+			}
+			
+			// Validazione email (opzionale ma se inserita deve essere valida)
+			if (emailAddress) {
+				const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+				if (!emailRegex.test(emailAddress)) {
+					showMessage('Inserisci un indirizzo email valido');
+					return;
+				}
+			}
+			
+			// Procedi con la prenotazione effettiva
+			performActualBooking(phoneNumber, emailAddress);
+		}
+		
+		// Funzione per cancellare la prenotazione
+		async function cancelBooking() {
+			if (!bookingResult || !bookingResult.number) {
+				showMessage('Errore: numero prenotazione non trovato', 'error');
+				return;
+			}
+			
+			if (!confirm('Sei sicuro di voler cancellare la prenotazione?')) {
+				return;
+			}
+			
+			try {
+				showLoading();
+				showMessage('⏳ Cancellazione prenotazione in corso...', 'info');
+				
+				// Estrai l'ID dell'appuntamento dal risultato della prenotazione
+				let appointmentID = null;
+				if (bookingResult.appointments && bookingResult.appointments.length > 0) {
+					appointmentID = bookingResult.appointments[0].id;
+				}
+				
+				if (!appointmentID) {
+					throw new Error('ID appuntamento non trovato');
+				}
+				
+				const cancelResponse = await fetch(
+					`https://www.sanita.puglia.it/sanita-api/reservation/${bookingResult.number}/patient/${currentFiscalCode}/company/${currentCompanyId}/cancel?appointmentsID=${appointmentID}&functionality=DISDETTA_PRENOTAZIONE&platform=WEB&accessMode=ANONIMO`,
+					{
+						method: 'DELETE',
+						headers: {
+							'Accept': 'application/json',
+							'Content-Type': 'application/json',
+							'Authorization': `Bearer ${accessToken}`
+						}
+					}
+				);
+				
+				if (!cancelResponse.ok) {
+					const errorData = await cancelResponse.json();
+					throw new Error(`Errore nella cancellazione: ${errorData.message || cancelResponse.status}`);
+				}
+				
+				const cancelResult = await cancelResponse.json();
+				
+				// Mostra il risultato della cancellazione
+				showMessage('✅ Prenotazione cancellata con successo!', 'success');
+				
+				// Ripristina il pulsante originale
+				const bookingButton = document.querySelector('.btn[onclick*="validateContactAndProceed"], .btn[onclick*="cancelBooking"]');
+				if (bookingButton) {
+					bookingButton.textContent = '📅 Completa Prenotazione';
+					bookingButton.onclick = validateContactAndProceed;
+				}
+				
+				// Reset delle variabili globali
+				bookingResult = null;
+				
+				console.log('Risultato cancellazione:', cancelResult);
+				
+			} catch (error) {
+				console.error('Errore durante la cancellazione:', error);
+				showMessage(`Errore durante la cancellazione: ${error.message}`, 'error');
+			} finally {
+				hideLoading();
+			}
+		}
+		
+		function toggleCard() {
+            const cardBody = document.getElementById('cardBody');
+            const icon = document.querySelector('.collapse-icon');
+            
+			if (cardBody.style.display === 'block') {
+                cardBody.style.display = 'none';
+                icon.classList.add('collapsed');
+            } else {
+                cardBody.style.display = 'block';
+                icon.classList.remove('collapsed');
+            }
+			
+            if (cardBody.classList.contains('expanded')) {
+                cardBody.classList.remove('expanded');
+                icon.classList.add('collapsed');
+            } else {
+                cardBody.classList.add('expanded');
+                icon.classList.remove('collapsed');
+            }
+        }
+		
+		// Funzione per aprire/chiudere il dropdown delle aziende
+        function toggleCompaniesDropdown() {
+            const dropdown = document.getElementById('companiesDropdown');
+            const arrow = document.getElementById('companiesArrow');
+            
+            if (dropdown.style.display === 'block') {
+                dropdown.style.display = 'none';
+                arrow.classList.remove('open');
+            } else {
+                dropdown.style.display = 'block';
+                arrow.classList.add('open');
+            }
+        }
+
+        // Funzione per selezionare/deselezionare un'azienda
+        function toggleCompany(companyCode) {
+            const checkbox = document.getElementById(`company_${companyCode}`);
+            const option = checkbox.closest('.multi-select-option');
+            
+            checkbox.checked = !checkbox.checked;
+            
+            if (checkbox.checked) {
+                if (!selectedCompanies.includes(companyCode)) {
+                    selectedCompanies.push(companyCode);
+                }
+                option.classList.add('selected');
+            } else {
+                selectedCompanies = selectedCompanies.filter(code => code !== companyCode);
+                option.classList.remove('selected');
+            }
+            
+            updateSelectedCompaniesDisplay();
+        }
+
+        // Funzione per aggiornare il testo visualizzato
+        function updateSelectedCompaniesDisplay() {
+            const displayText = document.getElementById('selectedCompaniesText');
+            
+            if (selectedCompanies.length === 0) {
+                displayText.textContent = 'Seleziona aziende ospedaliere...';
+                displayText.className = '';
+            } else {
+                const companyNames = {
+                    'C160114': 'ASL Bari',
+                    'C160907': 'Policlinico', 
+                    'C160113': 'ASL BAT',
+					//'C160115': 'ASL Foggia',
+					'C160112': 'ASL Taranto',
+					'C160106': 'ASL Brindisi',
+					'C160116': 'ASL Lecce',
+					'C160910': 'Azienda Ospedaliera Ospedali Riuniti',
+					'C160901': 'I.R.C.C.S. Ospedale Oncologico'
+                };
+                
+                const selectedNames = selectedCompanies.map(code => companyNames[code]);
+                displayText.textContent = selectedNames.join(', ');
+                displayText.className = 'selected-companies-display';
+            }
+        }
+
+        // Funzione per ottenere i codici delle aziende selezionate
+        function getSelectedCompanyCodes() {
+            return selectedCompanies.join(',');
+        }
+			
+        // Gestione responsive
+        window.addEventListener('resize', function() {
+        // Eventuali adattamenti per mobile
+        });
+		
+		// Aggiorna la validazione delle date quando cambiano
+		document.addEventListener('DOMContentLoaded', function() {
+			const cupDateInput = document.getElementById('cupDate');
+			const cupDateToInput = document.getElementById('cupDateTo');
+			
+			if (cupDateInput && cupDateToInput) {
+				cupDateInput.addEventListener('change', function() {
+					if (this.value) {
+						cupDateToInput.min = this.value;
+					}
+				});
+				
+				cupDateToInput.addEventListener('change', function() {
+					if (cupDateInput.value && this.value && cupDateInput.value > this.value) {
+						showMessage('La data di fine deve essere successiva alla data di inizio');
+						this.value = '';
+					}
+				});
+			}
+		});
+		
+		// Chiudi il dropdown quando si clicca fuori
+        document.addEventListener('click', function(event) {
+            const container = document.getElementById('companiesSelect');
+            const dropdown = document.getElementById('companiesDropdown');
+            const arrow = document.getElementById('companiesArrow');
+            
+            if (!container.contains(event.target)) {
+                dropdown.style.display = 'none';
+                arrow.classList.remove('open');
+            }
+        });
+    </script>
+</body>
+</html>
