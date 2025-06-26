@@ -401,8 +401,7 @@
 
         // Credenziali hardcoded
         const ADMIN_USERNAME = 'admin';
-        //const ADMIN_PASSWORD = 'puglia2025';
-		const STORED_PASSWORD_HASH = '10000:pt8wlFs3Svyj0j9k0k2sAtkZkBcokJkL:0-4332e1-57fefb74270b4941-3ebd28cf48f30c013f600ea7028a0bc73cb48977';
+	const STORED_PASSWORD_HASH = '10000:pt8wlFs3Svyj0j9k0k2sAtkZkBcokJkL:0-4332e1-57fefb74270b4941-3ebd28cf48f30c013f600ea7028a0bc73cb48977';
         
 
         function showLoading() {
@@ -451,7 +450,7 @@
 			
 			const isPasswordValid = passwordManager.verifyPassword(password, STORED_PASSWORD_HASH);
 
-            if (username === ADMIN_USERNAME && /*password === ADMIN_PASSWORD*/ isPasswordValid) {
+            if (username === ADMIN_USERNAME && isPasswordValid) {
                 isLoggedIn = true;
                 showMessage('Accesso amministrativo effettuato con successo!', 'success');
                 
