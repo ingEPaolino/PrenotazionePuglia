@@ -11,7 +11,7 @@
         <button class="logout-btn hidden" id="logoutBtn" onclick="initialLogout()">🚪 Esci</button>
         
         <div class="header">
-            <h1>🏥 CUP Puglia</h1>
+            <h1>🏥CUP Puglia</h1>
             <p>Sistema di prenotazione online per le prestazioni sanitarie</p>
         </div>
 
@@ -401,7 +401,9 @@
 
         // Credenziali hardcoded
         const ADMIN_USERNAME = 'admin';
-	const STORED_PASSWORD_HASH = '10000:pt8wlFs3Svyj0j9k0k2sAtkZkBcokJkL:0-4332e1-57fefb74270b4941-3ebd28cf48f30c013f600ea7028a0bc73cb48977';
+		const GUEST_USERNAME = 'ospite';
+		const STORED_PASSWORD_HASH = '10000:pt8wlFs3Svyj0j9k0k2sAtkZkBcokJkL:0-4332e1-57fefb74270b4941-3ebd28cf48f30c013f600ea7028a0bc73cb48977';
+		const STORED_PASSWORD_HASH_GUEST = '10000:K2XDs7AypoMZuRwsXmf9O7LigTAF4D32:0825bbba-5e15e4b8-25cd0a65-15f88875-4a6926ce0faa858a0401c0e313a737b1';
         
 
         function showLoading() {
@@ -449,8 +451,9 @@
             }
 			
 			const isPasswordValid = passwordManager.verifyPassword(password, STORED_PASSWORD_HASH);
+			const isPasswordValidGuest = passwordManager.verifyPassword(password, STORED_PASSWORD_HASH_GUEST);
 
-            if (username === ADMIN_USERNAME && isPasswordValid) {
+            if ((username === ADMIN_USERNAME || username === GUEST_USERNAME) && (isPasswordValid || isPasswordValidGuest)) {
                 isLoggedIn = true;
                 showMessage('Accesso amministrativo effettuato con successo!', 'success');
                 
@@ -641,12 +644,22 @@
 				
 				if (response.ok && prescriptionData.prescriptionDetails && prescriptionData.prescriptionDetails[0]?.healthServicesCUP) {
 					// Converte i servizi della ricetta nel formato compatibile con displayServices
-					const services = prescriptionData.prescriptionDetails[0].healthServicesCUP.map(service => ({
+					/*const services = prescriptionData.prescriptionDetails[0].healthServicesCUP.map(service => ({
 						descr: service.descr,
 						regionalCode: service.cupCode,
 						amount: service.amount || 0,
 						quantity: service.quantity || 1
-					}));
+					}));*/
+					// Converte tutti i servizi della ricetta nel formato compatibile con displayServices
+					const services = prescriptionData.prescriptionDetails.flatMap(detail =>
+						detail.healthServicesCUP.map(service => ({
+							descr: service.descr,
+							regionalCode: service.cupCode,
+							amount: service.amount || 0,
+							quantity: service.quantity || 1
+						}))
+					);
+
 					
 					// Seleziona automaticamente tutti i servizi trovati
 					selectedService = services;
@@ -834,11 +847,6 @@
 				availabilityControls.classList.add('hidden');
 			}
 		}
-
-        // Funzioni placeholder per gli altri eventi
-        function clearAllSelections() {
-            console.log('Rimuovi tutte le selezioni');
-        }
 
         // Versione modificata della funzione checkAvailability
         async function checkAvailability() {
@@ -1280,14 +1288,18 @@
 				return;
 			}
 			
-			const prescriptionServices = prescriptionData.prescriptionDetails[0].healthServicesCUP;
+			// Raccoglie tutti i servizi da tutte le prescriptionDetails
+			const prescriptionServices = prescriptionData.prescriptionDetails.flatMap(detail => detail.healthServicesCUP);
+
+			// Gestisce uno o più selectedService
 			const selectedServices = Array.isArray(selectedService) ? selectedService : [selectedService];
-			
+
 			// Crea una mappa dei servizi nella ricetta per codice regionale
 			const prescriptionServiceMap = new Map();
 			prescriptionServices.forEach(service => {
 				prescriptionServiceMap.set(service.cupCode, service);
 			});
+
 			
 			// Verifica corrispondenza
 			const matchingServices = [];
